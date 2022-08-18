@@ -1,6 +1,7 @@
 package com.web.service.Imp;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.web.common.BaseContext;
@@ -70,7 +71,7 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersDao,Orders> implements 
         orders.setAmount(new BigDecimal(amount.get()));//总金额
         orders.setUserId(userId);
         orders.setNumber(String.valueOf(orderId));
-        orders.setUserName(user.getName());
+//        orders.setUserName(user.getName());
         orders.setConsignee(addressBook.getConsignee());
         orders.setPhone(addressBook.getPhone());
         orders.setAddress((addressBook.getProvinceName() == null ? "" : addressBook.getProvinceName())
@@ -83,5 +84,12 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersDao,Orders> implements 
 
         //清空购物车
         shoppingCartService.remove(shoppingCartLambdaQueryWrapper);
+    }
+
+    @Override
+    public void updateStatus(Orders orders) {
+        LambdaUpdateWrapper<Orders> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.set(Orders::getStatus, orders.getStatus());
+        update(updateWrapper);
     }
 }
