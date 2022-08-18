@@ -2,12 +2,9 @@ package com.web.service.Imp;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.web.common.CustomException;
 import com.web.dao.SetmealDao;
-import com.web.domain.Dish;
-import com.web.domain.DishFlavor;
 import com.web.domain.Setmeal;
 import com.web.domain.SetmealDish;
 import com.web.dto.SetmealDto;
@@ -86,15 +83,17 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealDao, Setmeal> impleme
 
     @Override
     public void deleteWithDish(List<Long> ids) {
+        //判断是否有东西在售
+
         //select count(*) form xx  where id  in (ids)  and status=1
 
         LambdaQueryWrapper<Setmeal> setmealLambdaQueryWrapper = new LambdaQueryWrapper<>();
         setmealLambdaQueryWrapper.in(Setmeal::getId, ids);
-        setmealLambdaQueryWrapper.eq(Setmeal::getStatus,1);
+        setmealLambdaQueryWrapper.eq(Setmeal::getStatus, 1);
         long count = count(setmealLambdaQueryWrapper);
         System.out.println(count);
 
-        if (count>0){
+        if (count > 0) {
             throw new CustomException("有套餐正在启售");
         }
 
@@ -111,15 +110,7 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealDao, Setmeal> impleme
     @Override
     public void updateStatus(Integer s,List<Long> ids) {
 
-        //todo  s=0  判断是否有东西在售
-
-
-
-
         //update setmeal set status = !s where id in isd
-
-//        LambdaQueryWrapper<Setmeal> queryWrapper = new LambdaQueryWrapper<>();
-//        queryWrapper.in(Setmeal::getId,ids);
 
         LambdaUpdateWrapper<Setmeal> setmealLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         setmealLambdaUpdateWrapper.in(Setmeal::getId,ids);

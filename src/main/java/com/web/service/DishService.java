@@ -17,7 +17,7 @@ public interface DishService extends IService<Dish> {
 
     void updateWithFlavor(DishDto dishDto);
 
-    void deleteWithFlavor(long id);
+    void deleteWithFlavor(List<Long> ids);
 
     List<DishDto> listWithFlavor(Dish dish);
 

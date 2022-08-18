@@ -3,18 +3,15 @@ package com.web.service.Imp;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.web.common.CustomException;
 import com.web.dao.DishDao;
-import com.web.domain.Category;
 import com.web.domain.Dish;
 import com.web.domain.DishFlavor;
 import com.web.dto.DishDto;
-import com.web.service.CategoryService;
 import com.web.service.DishFlavorService;
 import com.web.service.DishService;
-import kotlin.jvm.internal.Lambda;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -98,10 +95,18 @@ public class DishServiceImpl extends ServiceImpl<DishDao, Dish> implements DishS
     }
 
     @Override
-    public void deleteWithFlavor(long id) {
-        removeById(id);
-        LambdaQueryWrapper<DishFlavor> queryWrapper=new LambdaQueryWrapper();
-        queryWrapper.eq(DishFlavor::getDishId,id);
+    public void deleteWithFlavor(List<Long> ids) {
+        //判断是否在售
+        LambdaQueryWrapper<Dish> dishLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        dishLambdaQueryWrapper.eq(Dish::getStatus, 1);
+        dishLambdaQueryWrapper.in(Dish::getId, ids);
+        Dish dish = getOne(dishLambdaQueryWrapper);
+        if (dish != null) {
+            throw new CustomException(dish.getName() + "商品在售");
+        }
+        removeBatchByIds(ids);
+        LambdaQueryWrapper<DishFlavor> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.in(DishFlavor::getDishId, ids);
         dishFlavorService.remove(queryWrapper);
 
     }

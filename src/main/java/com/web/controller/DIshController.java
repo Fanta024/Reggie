@@ -75,15 +75,16 @@ public class DIshController {
     }
 
     @PutMapping
-    public R<String> update(@RequestBody DishDto dishDto){
+    public R<String> update(@RequestBody DishDto dishDto) {
         dishService.updateWithFlavor(dishDto);
-        return R.success(null,"修改成功");
+        return R.success(null, "修改成功");
     }
+
     //todo 批量删除  setmeal可参考
     @DeleteMapping
-    public R<String> delete(long id){
+    public R<String> delete(@RequestParam("id") List<Long> ids) {
 
-        dishService.deleteWithFlavor(id);
+        dishService.deleteWithFlavor(ids);
 
 
         return R.success(null, "删除成功");
