@@ -20,4 +20,6 @@ public interface DishService extends IService<Dish> {
     void deleteWithFlavor(long id);
 
     List<DishDto> listWithFlavor(Dish dish);
+
+    void updateStatus(Integer s, List<Long> ids);
 }

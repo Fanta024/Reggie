@@ -86,38 +86,18 @@ public class DIshController {
         dishService.deleteWithFlavor(id);
 
 
-        return R.success(null,"删除成功");
+        return R.success(null, "删除成功");
     }
 
-//    @GetMapping("/list")
-//    R<List<Dish>> list(Dish dish){
-//        LambdaQueryWrapper<Dish> queryWrapper = new LambdaQueryWrapper<>();
-//        queryWrapper.eq(Dish::getCategoryId,dish.getCategoryId());
-//        List<Dish> list = dishService.list(queryWrapper);
-//
-//        return R.success(list,"获取成功");
-//    }
-
-//    @GetMapping("/list")
-//    R<List<Dish>> list(Dish dish){
-//        LambdaQueryWrapper<Dish> queryWrapper = new LambdaQueryWrapper<>();
-//        queryWrapper.eq(Dish::getCategoryId,dish.getCategoryId());
-//        //启售的商品
-//        queryWrapper.eq(Dish::getStatus,1);
-//        List<Dish> list = dishService.list(queryWrapper);
-//        DishDto dishDto = new DishDto();
-//
-//        list.stream().map((itme)->{
-//            Long dishId = itme.getId();
-//        }).collect(Collectors.toList());
-//
-//
-//        return R.success(list,"获取成功");
-//    }
-
     @GetMapping("/list")
-    R<List<DishDto>> list(Dish dish){
+    R<List<DishDto>> list(Dish dish) {
         List<DishDto> dishDtos = dishService.listWithFlavor(dish);
-        return R.success(dishDtos,"获取成功");
+        return R.success(dishDtos, "获取成功");
+    }
+
+    @PostMapping("/status/{s}")
+    R<String> status(@PathVariable Integer s, @RequestParam List<Long> ids) {
+        dishService.updateStatus(s, ids);
+        return R.success(null, "修改成功");
     }
 }

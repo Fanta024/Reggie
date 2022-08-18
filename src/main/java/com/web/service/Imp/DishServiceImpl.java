@@ -1,6 +1,7 @@
 package com.web.service.Imp;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.web.dao.DishDao;
 import com.web.domain.Category;
@@ -10,6 +11,7 @@ import com.web.dto.DishDto;
 import com.web.service.CategoryService;
 import com.web.service.DishFlavorService;
 import com.web.service.DishService;
+import kotlin.jvm.internal.Lambda;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -133,6 +135,15 @@ public class DishServiceImpl extends ServiceImpl<DishDao, Dish> implements DishS
         }).collect(Collectors.toList());
 
         return dishDtoList;
+    }
+
+    @Override
+    public void updateStatus(Integer s, List<Long> ids) {
+        LambdaUpdateWrapper<Dish> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.in(Dish::getId, ids);
+        updateWrapper.set(Dish::getStatus, s);
+        update(updateWrapper);
+
     }
 
 }
