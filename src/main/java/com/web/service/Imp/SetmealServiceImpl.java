@@ -91,7 +91,6 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealDao, Setmeal> impleme
         setmealLambdaQueryWrapper.in(Setmeal::getId, ids);
         setmealLambdaQueryWrapper.eq(Setmeal::getStatus, 1);
         long count = count(setmealLambdaQueryWrapper);
-        System.out.println(count);
 
         if (count > 0) {
             throw new CustomException("有套餐正在启售");
@@ -103,7 +102,7 @@ public class SetmealServiceImpl extends ServiceImpl<SetmealDao, Setmeal> impleme
         LambdaQueryWrapper<SetmealDish> setmealDishLambdaQueryWrapper = new LambdaQueryWrapper<>();
         setmealDishLambdaQueryWrapper.in(SetmealDish::getSetmealId,ids);
 
-        setmealDishService.removeBatchByIds(ids);
+        setmealDishService.remove(setmealDishLambdaQueryWrapper);
 
     }
 

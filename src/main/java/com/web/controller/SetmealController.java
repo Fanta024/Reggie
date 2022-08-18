@@ -5,9 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.web.common.R;
 import com.web.domain.Setmeal;
-import com.web.domain.SetmealDish;
 import com.web.dto.SetmealDto;
-import com.web.service.SetmealDishService;
 import com.web.service.SetmealService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,9 +20,6 @@ public class SetmealController {
 
     @Autowired
     private SetmealService setmealService;
-
-    @Autowired
-    private SetmealDishService setmealDishService;
 
     @GetMapping("/page")
     public R<IPage> list(long page,long pageSize){
@@ -60,7 +55,7 @@ public class SetmealController {
 
         log.warn("{}",ids);
         setmealService.deleteWithDish(ids);
-        return null;
+        return R.success(null, "删除成功");
     }
 
     @PostMapping("/status/{s}")
