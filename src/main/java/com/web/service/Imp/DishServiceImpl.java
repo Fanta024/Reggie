@@ -12,10 +12,13 @@ import com.web.service.DishFlavorService;
 import com.web.service.DishService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,22 +26,8 @@ import java.util.stream.Collectors;
 public class DishServiceImpl extends ServiceImpl<DishDao, Dish> implements DishService {
     @Autowired
     private DishFlavorService dishFlavorService;
-//todo The dependencies of some of the beans in the application context form a cycle:
-//
-//   categoryController (field private com.web.service.CategoryService com.web.controller.CategoryController.categoryService)
-//┌─────┐
-//|  categoryServiceImpl (field private com.web.service.DishService com.web.service.Imp.CategoryServiceImpl.dishService)
-//↑     ↓
-//|  dishServiceImpl (field private com.web.service.CategoryService com.web.service.Imp.DishServiceImpl.categoryService)
-//└─────┘
-//
-//
-//Action:
-//
-//Relying upon circular references is discouraged and they are prohibited by default. Update your application to remove the dependency cycle between beans. As a last resort, it may be possible to break the cycle automatically by setting spring.main.allow-circular-references to true.
-////    @Lazy
-//    @Autowired
-//    private CategoryService categoryService;
+    @Autowired
+    public RedisTemplate redisTemplate;
 
     @Override
     public void saveWithFlavor(DishDto dishDto) {
@@ -48,14 +37,18 @@ public class DishServiceImpl extends ServiceImpl<DishDao, Dish> implements DishS
 
         List<DishFlavor> flavors = dishDto.getFlavors();
 
-        flavors.stream().map((item)->{
+        flavors.stream().map((item) -> {
             //todo  有可能是空  口味   （name）
 
 //            if(!(item.getName().isEmpty()))
-                item.setDishId(dishId);
-            return item;}).collect(Collectors.toList());
+            item.setDishId(dishId);
+            return item;
+        }).collect(Collectors.toList());
 
         dishFlavorService.saveBatch(flavors);
+
+        String key = "dish_" + dishDto.getCategoryId() + "_1";
+        redisTemplate.delete(key);
     }
 
     @Override
@@ -84,13 +77,23 @@ public class DishServiceImpl extends ServiceImpl<DishDao, Dish> implements DishS
         dishFlavorService.remove(queryWrapper);
 
         List<DishFlavor> flavors = dishDto.getFlavors();
-        flavors.stream().map((item)->{
+        flavors.stream().map((item) -> {
             //todo  有可能是空  口味   （name）
 
 //            if(!(item.getName().isEmpty()))
             item.setDishId(dishDto.getId());
-            return item;}).collect(Collectors.toList());
+            return item;
+        }).collect(Collectors.toList());
         dishFlavorService.saveBatch(flavors);
+
+        //清理redis缓存
+        //全部
+//        Set keys = redisTemplate.keys("dish_*");
+//        redisTemplate.delete(keys);
+
+        //单个
+        String key = "dish_" + dishDto.getCategoryId() + "_1";
+        redisTemplate.delete(key);
 
     }
 
@@ -109,16 +112,25 @@ public class DishServiceImpl extends ServiceImpl<DishDao, Dish> implements DishS
         queryWrapper.in(DishFlavor::getDishId, ids);
         dishFlavorService.remove(queryWrapper);
 
+
     }
 
     @Override
     public List<DishDto> listWithFlavor(Dish dish) {
+        List<DishDto> dishDtoList;
+
+        String key = "dish_" + dish.getCategoryId() + "_" + dish.getStatus();
+        dishDtoList = (List<DishDto>) redisTemplate.opsForValue().get(key);
+        if (dishDtoList != null) {
+            return dishDtoList;
+        }
+
         LambdaQueryWrapper<Dish> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(Dish::getCategoryId,dish.getCategoryId());
-        queryWrapper.eq(Dish::getStatus,1);
+        queryWrapper.eq(Dish::getCategoryId, dish.getCategoryId());
+        queryWrapper.eq(Dish::getStatus, 1);
 
         List<Dish> dishList = list(queryWrapper);
-        List<DishDto> dishDtoList = dishList.stream().map(item -> {
+        dishDtoList = dishList.stream().map(item -> {
             DishDto dishDto = new DishDto();
             BeanUtils.copyProperties(item, dishDto);
 
@@ -138,7 +150,7 @@ public class DishServiceImpl extends ServiceImpl<DishDao, Dish> implements DishS
 
             return dishDto;
         }).collect(Collectors.toList());
-
+        redisTemplate.opsForValue().set(key, dishDtoList, 1, TimeUnit.HOURS);
         return dishDtoList;
     }
 
@@ -148,6 +160,9 @@ public class DishServiceImpl extends ServiceImpl<DishDao, Dish> implements DishS
         updateWrapper.in(Dish::getId, ids);
         updateWrapper.set(Dish::getStatus, s);
         update(updateWrapper);
+
+        Set keys = redisTemplate.keys("dish_*");
+        redisTemplate.delete(keys);
 
     }
 
